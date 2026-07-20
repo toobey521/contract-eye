@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>法眼识契 — 合同风险智能把控</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#111827;--card2:#1a2332;--primary:#2563eb;--primary-light:#3b82f6;--cyan:#06b6d4;--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:16px}
+body{background:#0a0e1a;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;padding:20px}
+/* Phone frame */
+.phone{width:390px;height:844px;background:var(--bg);border-radius:40px;overflow:hidden;position:relative;box-shadow:0 0 0 2px #1e293b,0 20px 60px rgba(0,0,0,.8);display:flex;flex-direction:column}
+/* Status bar */
+.status-bar{display:flex;justify-content:space-between;padding:12px 28px 8px;color:var(--text2);font-size:12px;font-weight:600;flex-shrink:0}
+.status-bar .time{font-weight:700;color:var(--text)}
+/* Notch */
+.notch{width:150px;height:28px;background:#000;border-radius:0 0 20px 20px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10}
+.notch::after{content:'📷';position:absolute;right:20px;top:6px;font-size:8px;opacity:.3}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:0 20px 80px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.content::-webkit-scrollbar{width:0}
+.content::-webkit-scrollbar-track{background:transparent}
+
+/* Hide all screens initially */
+.screen{display:none;animation:fadeIn .35s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes scan{0%{top:-10px}100%{top:100%}}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* Bottom nav */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;height:72px;background:rgba(17,24,39,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-around;align-items:center;padding-bottom:8px;flex-shrink:0}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text3);font-size:10px;cursor:pointer;transition:all .2s;padding:4px 12px;border-radius:8px;background:none;border:none;font-family:inherit}
+.nav-item .icon{font-size:22px;line-height:1}
+.nav-item.active{color:var(--primary)}
+.nav-item.active .icon{filter:drop-shadow(0 0 8px rgba(37,99,235,.4))}
+
+/* Home screen */
+.logo-area{text-align:center;padding:24px 0 16px}
+.logo-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+.logo-area h1{font-size:22px;color:var(--text);font-weight:700;letter-spacing:1px}
+.logo-area p{color:var(--text2);font-size:13px;margin-top:4px}
+
+/* Quick upload cards */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.upload-card{background:linear-gradient(135deg,var(--card),var(--card2));border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;border:1px solid rgba(255,255,255,.05);transition:all .25s}
+.upload-card:hover{transform:translateY(-2px);border-color:var(--primary)}
+.upload-card .icon{font-size:36px;margin-bottom:8px;display:block}
+.upload-card .title{color:var(--text);font-size:14px;font-weight:600}
+.upload-card .desc{color:var(--text3);font-size:11px;margin-top:4px}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stat-card{background:var(--card);border-radius:12px;padding:14px 10px;text-align:center;border:1px solid rgba(255,255,255,.04)}
+.stat-card .num{font-size:20px;font-weight:700;color:var(--primary-light)}
+.stat-card .label{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* Section titles */
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 0 12px}
+.section-title h3{color:var(--text);font-size:15px;font-weight:600}
+.section-title a{color:var(--primary);font-size:12px;cursor:pointer}
+
+/* Law preview cards */
+.law-card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04);cursor:pointer;transition:all .2s;display:flex;gap:12px;align-items:flex-start}
+.law-card:hover{border-color:rgba(37,99,235,.3);transform:translateX(3px)}
+.law-card .badge{flex-shrink:0;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600}
+.badge-law{background:rgba(37,99,235,.2);color:var(--primary)}
+.badge-case{background:rgba(6,182,212,.2);color:var(--cyan)}
+.law-card .info{flex:1}
+.law-card .info .title{color:var(--text);font-size:13px;font-weight:600}
+.law-card .info .sub{color:var(--text3);font-size:11px;margin-top:2px}
+.law-card .arrow{color:var(--text3);font-size:16px}
+
+/* Upload page */
+.upload-area{background:var(--card);border:2px dashed rgba(37,99,235,.3);border-radius:var(--radius);padding:48px 20px;text-align:center;margin:20px 0;cursor:pointer;transition:all .3s;position:relative}
+.upload-area:hover{border-color:var(--primary);background:rgba(37,99,235,.05)}
+.upload-area .icon{font-size:48px;display:block;margin-bottom:12px}
+.upload-area h3{color:var(--text);font-size:16px}
+.upload-area p{color:var(--text3);font-size:12px;margin-top:6px}
+.upload-area .format-tips{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.upload-area .format-tips span{background:rgba(255,255,255,.05);padding:4px 10px;border-radius:6px;font-size:10px;color:var(--text2)}
+.upload-buttons{display:flex;gap:12px;margin-top:16px}
+.upload-buttons button{flex:1;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#1d4ed8);color:white}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-secondary:hover{background:rgba(255,255,255,.12)}
+
+/* OCR preview */
+.ocr-preview{background:var(--card);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.ocr-image{height:160px;background:linear-gradient(135deg,#1a2332,#0f172a);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ocr-image img{width:100%;height:100%;object-fit:cover;filter:brightness(.7)}
+.ocr-image .scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scan 2s ease-in-out infinite}
+.ocr-image .overlay-text{position:absolute;color:rgba(255,255,255,.6);font-size:12px;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:8px;backdrop-filter:blur(4px)}
+.ocr-text{padding:16px}
+.ocr-text .label{color:var(--text3);font-size:11px;margin-bottom:6px;display:flex;justify-content:space-between}
+.ocr-text .label .chars{color:var(--primary);font-weight:600}
+.ocr-text textarea{width:100%;height:140px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--text);font-size:13px;padding:12px;font-family:inherit;line-height:1.6;resize:none;outline:none;transition:border-color .2s}
+.ocr-text textarea:focus{border-color:var(--primary)}
+
+/* Risk report */
+.report-header{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:var(--radius);padding:20px;margin:16px 0;border:1px solid rgba(255,255,255,.06);text-align:center}
+.report-header .score-circle{width:80px;height:80px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;position:relative}
+.score-danger{background:conic-gradient(var(--danger) 0deg 120deg,#1e293b 120deg 360deg);color:var(--danger)}
+.score-warning{background:conic-gradient(var(--warning) 0deg 220deg,#1e293b 220deg 360deg);color:var(--warning)}
+.score-safe{background:conic-gradient(var(--success) 0deg 330deg,#1e293b 330deg 360deg);color:var(--success)}
+.report-header .verdict{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.report-header .verdict-sub{color:var(--text2);font-size:13px}
+.report-header .risk-stats{display:flex;justify-content:center;gap:20px;margin-top:16px}
+.report-header .risk-stats span{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600}
+.risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* Risk items */
+.risk-item{background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;border-left:3px solid;cursor:pointer;transition:all .2s}
+.risk-item:hover{transform:translateX(3px)}
+.risk-item.high{border-color:var(--danger)}
+.risk-item.medium{border-color:var(--warning)}
+.risk-item.low{border-color:var(--success)}
+.risk-item .header{display:flex;justify-content:space-between;align-items:flex-start}
+.risk-item .header .title{color:var(--text);font-size:13px;font-weight:600;flex:1}
+.risk-item .header .level{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;flex-shrink:0}
+.level-high{background:rgba(239,68,68,.15);color:var(--danger)}
+.level-medium{background:rgba(245,158,11,.15);color:var(--warning)}
+.level-low{background:rgba(16,185,129,.15);color:var(--success)}
+.risk-item .preview{color:var(--text2);font-size:12px;margin-top:6px;line-height:1.5}
+.risk-item .meta{display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--text3)}
+.risk-item .meta span{display:flex;align-items:center;gap:3px}
+
+/* Risk detail (expanded) */
+.risk-detail{display:none;padding:16px;margin-bottom:8px;background:var(--card);border-radius:12px;border:1px solid rgba(37,99,235,.2)}
+.risk-detail.open{display:block;animation:slideUp .3s ease}
+.risk-detail h4{color:var(--primary);font-size:13px;font-weight:600;margin:10px 0 6px}
+.risk-detail h4:first-child{margin-top:0}
+.risk-detail p{color:var(--text2);font-size:12px;line-height:1.6}
+.risk-detail .law-ref{background:rgba(37,99,235,.08);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--text);border-left:2px solid var(--primary)}
+.risk-detail .case-ref{background:rgba(6,182,212,.06);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--text);border-left:2px solid var(--cyan)}
+.risk-detail .advice-box{background:rgba(16,185,129,.06);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--success);border-left:2px solid var(--success)}
+
+/* Laws & cases page */
+.search-bar{display:flex;gap:8px;margin:16px 0}
+.search-bar input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.search-bar input:focus{border-color:var(--primary)}
+.search-bar input::placeholder{color:var(--text3)}
+.search-bar button{background:var(--primary);border:none;border-radius:10px;padding:0 14px;color:white;font-size:18px;cursor:pointer}
+.filter-tabs{display:flex;gap:6px;margin:12px 0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+.filter-tabs::-webkit-scrollbar{display:none}
+.filter-tab{padding:6px 14px;border-radius:20px;font-size:12px;background:rgba(255,255,255,.05);color:var(--text2);border:1px solid transparent;white-space:nowrap;cursor:pointer;transition:all .2s}
+.filter-tab.active{background:rgba(37,99,235,.15);color:var(--primary);border-color:rgba(37,99,235,.3)}
+.filter-tab:hover{border-color:rgba(255,255,255,.1)}
+
+/* History page */
+.history-item{background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;gap:12px;cursor:pointer;border:1px solid rgba(255,255,255,.04);transition:all .2s}
+.history-item:hover{border-color:rgba(37,99,235,.2)}
+.history-item .type-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.history-item .info{flex:1}
+.history-item .info .name{color:var(--text);font-size:13px;font-weight:600}
+.history-item .info .date{color:var(--text3);font-size:11px;margin-top:2px}
+.history-item .score{text-align:right}
+.history-item .score .num{font-size:18px;font-weight:700}
+.history-item .score .label{font-size:10px;color:var(--text3)}
+
+/* Page header */
+.page-header{display:flex;align-items:center;gap:12px;padding:16px 0 4px}
+.page-header .back{font-size:22px;cursor:pointer;color:var(--text2);background:none;border:none;padding:4px}
+.page-header h2{color:var(--text);font-size:18px;font-weight:600}
+.page-header .sub{color:var(--text3);font-size:12px;margin-left:auto}
+
+/* Loading overlay */
+.loading-overlay{display:none;position:absolute;inset:0;background:rgba(10,14,26,.9);z-index:50;justify-content:center;align-items:center;flex-direction:column;gap:16px;backdrop-filter:blur(8px)}
+.loading-overlay.active{display:flex}
+.loading-spinner{width:48px;height:48px;border:3px solid rgba(37,99,235,.15);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay .text{color:var(--text2);font-size:14px}
+.loading-overlay .progress-bar{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.loading-overlay .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--cyan));border-radius:4px;transition:width .3s}
+
+/* Step indicator for analysis */
+.steps{display:flex;gap:8px;justify-content:center;margin:12px 0 20px}
+.step{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:all .4s}
+.step.active{width:24px;border-radius:4px;background:var(--primary)}
+.step.done{background:var(--success)}
+
+/* Toast */
+.toast{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);backdrop-filter:blur(10px);color:var(--text);padding:10px 20px;border-radius:10px;font-size:13px;z-index:60;display:none;white-space:nowrap;border:1px solid rgba(255,255,255,.1)}
+
+/* Print button */
+.action-bar{display:flex;gap:8px;margin:16px 0}
+.action-bar button{flex:1;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-export{background:linear-gradient(135deg,var(--primary),#1d4ed8);color:white}
+.btn-share{background:rgba(255,255,255,.08);color:var(--text)}
+
+/* Responsive */
+@media(max-width:420px){
+  .phone{width:100%;height:100vh;border-radius:0;box-shadow:none;padding:0}
+  body{padding:0}
+}
+
+/* Contract type tag */
+.contract-type{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin:8px 0}
+.type-sale{background:rgba(16,185,129,.15);color:var(--success)}
+.type-employment{background:rgba(37,99,235,.15);color:var(--primary)}
+.type-lease{background:rgba(245,158,11,.15);color:var(--warning)}
+.type-loan{background:rgba(139,92,246,.15);color:#a78bfa}
+.type-construction{background:rgba(239,68,68,.15);color:var(--danger)}
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+  <!-- Notch -->
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span class="time" id="clock">9:41</span>
+    <span>📶 🔋 98%</span>
+  </div>
+
+  <!-- Content area -->
+  <div class="content" id="content">
+
+    <!-- ==================== SCREEN: HOME ==================== -->
+    <div class="screen active" id="screen-home">
+      <div class="logo-area">
+        <div class="logo-icon">⚖️</div>
+        <h1>法眼识契</h1>
+        <p>AI 合同风险智能审查 · 拍照即出报告</p>
+      </div>
+
+      <div class="upload-grid">
+        <div class="upload-card" onclick="goToPage('upload')">
+          <span class="icon">📸</span>
+          <div class="title">拍照识别</div>
+          <div class="desc">拍摄合同照片即分析</div>
+        </div>
+        <div class="upload-card" onclick="goToPage('upload')">
+          <span class="icon">📁</span>
+          <div class="title">上传图片</div>
+          <div class="desc">从相册选择合同照片</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="total-laws">1,287</div>
+          <div class="label">法律法规</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="total-cases">35,682</div>
+          <div class="label">关联判例</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="total-reports">128</div>
+          <div class="label">已生成报告</div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h3>📋 常用法律</h3>
+        <a onclick="goToPage('laws')">查看全部 →</a>
+      </div>
+
+      <div class="law-card" onclick="showToast('民法典·合同编 全文已收录')">
+        <span class="badge badge-law">法律</span>
+        <div class="info">
+          <div class="title">中华人民共和国民法典 · 合同编</div>
+          <div class="sub">第二编 典型合同 · 28章526条</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="law-card" onclick="showToast('劳动合同法 全文已收录')">
+        <span class="badge badge-law">法律</span>
+        <div class="info">
+          <div class="title">中华人民共和国劳动合同法</div>
+          <div class="sub">2008.1.1施行 · 2012修订 · 8章98条</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="law-card" onclick="showToast('公司法 全文已收录')">
+        <span class="badge badge-law">法律</span>
+        <div class="info">
+          <div class="title">中华人民共和国公司法</div>
+          <div class="sub">2023修订 · 15章260条</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: UPLOAD ==================== -->
+    <div class="screen" id="screen-upload">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('home')">←</button>
+        <h2>上传合同</h2>
+        <span class="sub">支持 JPG/PNG/PDF</span>
+      </div>
+
+      <div class="upload-area" onclick="simulateUpload()">
+        <span class="icon">📄</span>
+        <h3>点击拍照或选择合同照片</h3>
+        <p>支持清晰拍摄的合同页面，自动 OCR 识别文字</p>
+        <div class="format-tips">
+          <span>📷 拍照</span>
+          <span>🖼 相册</span>
+          <span>📎 PDF</span>
+        </div>
+      </div>
+
+      <div class="upload-buttons">
+        <button class="btn-primary" onclick="simulateUpload()">📸 拍照识别</button>
+        <button class="btn-secondary" onclick="simulateUpload()">🖼 从相册选择</button>
+      </div>
+
+      <div style="margin-top:24px;padding:16px;background:var(--card);border-radius:12px;border:1px solid rgba(37,99,235,.1)">
+        <div style="color:var(--text);font-size:13px;font-weight:600;margin-bottom:8px">💡 拍摄小提示</div>
+        <ul style="color:var(--text2);font-size:12px;line-height:1.8;padding-left:16px">
+          <li>确保光线充足，合同平整无折皱</li>
+          <li>拍摄清晰完整的每一页</li>
+          <li>避免手指遮挡文字内容</li>
+          <li>建议使用"文档扫描"模式</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: OCR PREVIEW ==================== -->
+    <div class="screen" id="screen-ocr">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('upload')">←</button>
+        <h2>识别预览</h2>
+        <span class="sub" id="ocr-chars">识别共 1,286 字</span>
+      </div>
+
+      <div class="ocr-preview">
+        <div class="ocr-image">
+          <div class="scan-line"></div>
+          <div class="overlay-text">📄 买卖合同_20240715.jpg</div>
+        </div>
+        <div class="ocr-text">
+          <div class="label">
+            <span>识别文本 <span style="color:var(--text2);font-weight:400">（可编辑修正）</span></span>
+            <span class="chars">置信度 97.3%</span>
+          </div>
+          <textarea id="ocr-textarea">合同编号：HT-2024-0715
+
+甲方（出卖人）：×××科技有限公司
+地址：北京市海淀区中关村大街1号
+法定代表人：张三
+
+乙方（买受人）：×××商贸有限公司
+地址：上海市浦东新区陆家嘴金融区
+法定代表人：李四
+
+第一条 标的物
+甲方向乙方出售服务器设备共计50台，规格型号为S220T。
+
+第二条 价款及支付
+合同总价款为人民币1,500,000元（大写：壹佰伍拾万元整）。
+乙方应于合同签订后5个工作日内支付合同总价款的30%作为定金。
+余款于标的物交付之日起7个工作日内一次性支付。
+
+第三条 交付
+甲方应于2024年8月15日前将标的物交付至乙方指定地点。
+标的物所有权自交付之日起转移至乙方。
+
+第四条 质量标准
+标的物质量应符合国家标准，具体技术参数详见附件一。
+质量异议期为标的物交付后30日内，逾期视为验收合格。
+
+第五条 违约责任
+乙方逾期支付价款的，按日向甲方支付合同总价款千分之五的违约金。
+甲方逾期交付的，按日向乙方支付合同总价款千分之二的违约金。
+任何一方违约，应向守约方支付合同总价款30%的违约金。
+
+第六条 争议解决
+因本合同产生的争议，双方应友好协商解决。
+协商不成的，由甲方所在地人民法院管辖。
+
+第七条 其他
+本合同一式两份，自双方签字盖章之日起生效。
+本合同为格式合同，最终解释权归甲方所有。</textarea>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn-primary" onclick="startAnalysis()">🚀 开始分析风险</button>
+        <button class="btn-secondary" onclick="goToPage('upload')">↩ 重新上传</button>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: ANALYSIS LOADING ==================== -->
+    <div class="screen" id="screen-loading">
+      <div class="page-header">
+        <span class="back" style="cursor:default;opacity:0">←</span>
+        <h2>AI 风险分析中</h2>
+        <span class="sub">请稍候...</span>
+      </div>
+      <div style="text-align:center;padding:40px 0">
+        <div class="loading-spinner" style="width:64px;height:64px;margin:0 auto 20px;border-width:4px"></div>
+        <div id="loading-text" style="color:var(--text2);font-size:14px">正在扫描合同条款...</div>
+        <div class="progress-bar" style="width:260px;margin:16px auto 8px">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div id="progress-label" style="color:var(--text3);font-size:11px">0%</div>
+        <div class="steps" id="analysis-steps">
+          <div class="step" data-step="0"></div>
+          <div class="step" data-step="1"></div>
+          <div class="step" data-step="2"></div>
+          <div class="step" data-step="3"></div>
+        </div>
+        <div id="step-label" style="color:var(--text3);font-size:11px;margin-top:4px">合同类型识别</div>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: REPORT ==================== -->
+    <div class="screen" id="screen-report">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('home')">←</button>
+        <h2>风险报告</h2>
+        <span class="sub" style="font-size:10px;color:var(--text3)">买卖合同</span>
+      </div>
+
+      <div class="report-header">
+        <div class="score-circle score-danger" id="score-circle">68</div>
+        <div class="verdict">⚠️ 建议修改后签署</div>
+        <div class="verdict-sub">发现 <span style="color:var(--danger);font-weight:700">3</span> 项高风险、<span style="color:var(--warning);font-weight:700">5</span> 项中风险、<span style="color:var(--success);font-weight:700">2</span> 项低风险</div>
+        <div class="risk-stats">
+          <span><span class="risk-dot" style="background:var(--danger)"></span>高风险 3</span>
+          <span><span class="risk-dot" style="background:var(--warning)"></span>中风险 5</span>
+          <span><span class="risk-dot" style="background:var(--success)"></span>低风险 2</span>
+        </div>
+        <div style="margin-top:14px">
+          <span class="contract-type type-sale">📦 买卖合同</span>
+          <span class="contract-type" style="background:rgba(6,182,212,.1);color:var(--cyan);margin-left:6px">🤖 AI 分析 · 仅供参考</span>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn-export" onclick="showToast('📄 报告已导出为 PDF')">📄 导出报告</button>
+        <button class="btn-share" onclick="showToast('🔗 链接已复制到剪贴板')">🔗 分享报告</button>
+      </div>
+
+      <div class="section-title"><h3>🔴 高风险项</h3></div>
+      <div id="risk-items-high"></div>
+
+      <div class="section-title"><h3>🟡 中风险项</h3></div>
+      <div id="risk-items-medium"></div>
+
+      <div class="section-title"><h3>🟢 低风险项</h3></div>
+      <div id="risk-items-low"></div>
+    </div>
+
+    <!-- ==================== SCREEN: RISK DETAIL ==================== -->
+    <div class="screen" id="screen-detail">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('report')">←</button>
+        <h2 id="detail-title">风险详情</h2>
+        <span class="sub" id="detail-level"></span>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+
+    <!-- ==================== SCREEN: LAWS ==================== -->
+    <div class="screen" id="screen-laws">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('home')">←</button>
+        <h2>法律法规库</h2>
+        <span class="sub">1,287 部</span>
+      </div>
+
+      <div class="search-bar">
+        <input id="law-search" placeholder="搜索法律名称或条款..." oninput="filterLaws()">
+        <button onclick="filterLaws()">🔍</button>
+      </div>
+
+      <div class="filter-tabs" id="law-tabs">
+        <div class="filter-tab active" data-cat="all" onclick="switchLawTab('all',this)">全部</div>
+        <div class="filter-tab" data-cat="civil" onclick="switchLawTab('civil',this)">民法典</div>
+        <div class="filter-tab" data-cat="labor" onclick="switchLawTab('labor',this)">劳动法</div>
+        <div class="filter-tab" data-cat="company" onclick="switchLawTab('company',this)">公司</div>
+        <div class="filter-tab" data-cat="contract" onclick="switchLawTab('contract',this)">合同</div>
+        <div class="filter-tab" data-cat="procedure" onclick="switchLawTab('procedure',this)">程序法</div>
+      </div>
+
+      <div id="law-list"></div>
+    </div>
+
+    <!-- ==================== SCREEN: HISTORY ==================== -->
+    <div class="screen" id="screen-history">
+      <div class="page-header">
+        <button class="back" onclick="goToPage('home')">←</button>
+        <h2>审查记录</h2>
+        <span class="sub">共 128 份</span>
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="goToPage('home')">
+      <span class="icon">🏠</span>
+      <span>首页</span>
+    </button>
+    <button class="nav-item" data-page="upload" onclick="goToPage('upload')">
+      <span class="icon">📸</span>
+      <span>合同审查</span>
+    </button>
+    <button class="nav-item" data-page="laws" onclick="goToPage('laws')">
+      <span class="icon">📚</span>
+      <span>法律法规</span>
+    </button>
+    <button class="nav-item" data-page="history" onclick="goToPage('history')">
+      <span class="icon">📋</span>
+      <span>记录</span>
+    </button>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="text">正在分析合同...</div>
+    <div class="progress-bar"><div class="progress-fill" id="overlay-progress" style="width:0%"></div></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const LAW_DATA = [
+  {name:'中华人民共和国民法典·合同编',cat:'contract',tag:'法律',badge:'badge-law',desc:'第二编 典型合同 · 28章526条',detail:'涵盖买卖合同、借款合同、租赁合同、建设工程合同、技术合同等19类典型合同及准合同'},
+  {name:'中华人民共和国劳动合同法',cat:'labor',tag:'法律',badge:'badge-law',desc:'2008.1.1施行 · 2012修订 · 8章98条',detail:'劳动合同的订立、履行、变更、解除和终止，集体合同、劳务派遣、非全日制用工'},
+  {name:'中华人民共和国公司法（2023修订）',cat:'company',tag:'法律',badge:'badge-law',desc:'2023修订 · 15章260条',detail:'公司登记、组织机构、股东权利义务、股份发行与转让、公司债券、财务与会计'},
+  {name:'最高人民法院关于适用《民法典》合同编通则的解释',cat:'contract',tag:'司法解释',badge:'badge-law',desc:'法释〔2024〕X号',detail:'合同效力、合同履行、合同保全、合同变更转让、合同解除、违约责任等一般规则'},
+  {name:'最高人民法院关于审理买卖合同纠纷案件适用法律问题的解释',cat:'contract',tag:'司法解释',badge:'badge-law',desc:'法释〔2024〕X号',detail:'买卖合同的成立、标的物交付、风险负担、质量异议、价款支付等'},
+  {name:'中华人民共和国招标投标法',cat:'contract',tag:'法律',badge:'badge-law',desc:'2000.1.1施行 · 2017修订',detail:'招标、投标、开标、评标和中标程序'},
+  {name:'最高人民法院关于审理建设工程施工合同纠纷案件适用法律问题的解释（一）',cat:'contract',tag:'司法解释',badge:'badge-law',desc:'法释〔2020〕25号',detail:'建设工程施工合同效力、工期、质量、价款结算、优先受偿权'},
+  {name:'中华人民共和国民事诉讼法',cat:'procedure',tag:'法律',badge:'badge-law',desc:'2021修正 · 4编27章',detail:'管辖、审判程序、执行程序等'},
+  {name:'中华人民共和国仲裁法',cat:'procedure',tag:'法律',badge:'badge-law',desc:'1995.9.1施行 · 2017修正',detail:'仲裁协议、仲裁程序、仲裁裁决的撤销和执行'},
+  {name:'中华人民共和国民法典·物权编',cat:'civil',tag:'法律',badge:'badge-law',desc:'第二编 物权 · 5个分编',detail:'所有权、用益物权、担保物权（抵押权、质权、留置权）'},
+  {name:'中华人民共和国民法典·总则编',cat:'civil',tag:'法律',badge:'badge-law',desc:'第一编 总则 · 10章',detail:'基本规定、自然人、法人、民事权利、民事法律行为、代理、诉讼时效'},
+  {name:'最高人民法院关于适用《民法典》担保制度的解释',cat:'civil',tag:'司法解释',badge:'badge-law',desc:'法释〔2020〕28号',detail:'保证、抵押、质押、留置权、定金等担保制度的适用规则'},
+];
+
+const CASE_DATA = [
+  {id:'(2024)沪01民终5678号',name:'上海某科技公司与某商贸公司买卖合同纠纷案',court:'上海市第一中级人民法院',date:'2024-03-15',key:'违约金过高调整'},
+  {id:'(2023)京03民终4567号',name:'北京某公司与某供应商买卖合同纠纷案',court:'北京市第三中级人民法院',date:'2023-11-20',key:'定金罚则适用'},
+  {id:'(2024)粤01民终1234号',name:'广州某贸易公司与某制造企业质量纠纷案',court:'广州市中级人民法院',date:'2024-01-08',key:'质量异议期效力'}
+];
+
+const RISK_DATA = [
+  {
+    id:'r1',level:'high',title:'违约金比例过高 — 30%违约金条款',
+    preview:'合同约定任何一方违约需支付合同总价款30%的违约金（450,000元），远超法律允许的合理范围',
+    detail:{
+      desc:'第五条约定"任何一方违约，应向守约方支付合同总价款30%的违约金"。以合同总价150万元计，违约金高达45万元。根据《民法典》第585条及相关司法解释，约定的违约金超过造成损失的30%即可能被认定为"过分高于造成的损失"，法院通常予以调低。',
+      law:'《中华人民共和国民法典》第585条\n最高人民法院关于适用《民法典》合同编通则的解释第65条\n最高人民法院《关于当前形势下审理民商事合同纠纷案件若干问题的指导意见》第8条',
+      case:'参考案例：(2024)沪01民终5678号 — 上海某科技公司买卖合同纠纷案，法院认定卖方约定20%违约金仍被调低至实际损失的1.3倍\n(2023)京03民终4567号 — 北京某买卖合同纠纷，法院明确违约金超过损失30%即应调整',
+      advice:'建议修改为："任何一方违约，应向守约方支付相当于实际损失的违约金，但最高不超过合同总价款的20%。"\n或明确约定具体违约金计算方式，如"按日万分之五计算"。'
+    }
+  },
+  {
+    id:'r2',level:'high',title:'格式条款 — "最终解释权归甲方"',
+    preview:'第七条约定"最终解释权归甲方所有"，属于典型的格式条款陷阱，可能导致该条款无效',
+    detail:{
+      desc:'第七条约定"本合同为格式合同，最终解释权归甲方所有"。根据《民法典》第496-498条，提供格式条款一方不合理地免除或者减轻其责任、加重对方责任、限制对方主要权利的条款无效。'最终解释权归甲方'属于典型的加重对方责任条款，司法实践中一致认定为无效条款。',
+      law:'《中华人民共和国民法典》第496条（格式条款说明义务）\n《中华人民共和国民法典》第497条（格式条款无效情形）\n《中华人民共和国消费者权益保护法》第26条',
+      case:'参考案例：(2023)京0105民初23456号 — 北京朝阳法院认定"最终解释权归本公司所有"条款无效\n最高人民法院指导案例64号：格式条款中"最终解释权"约定无效',
+      advice:'建议直接删除"本合同为格式合同，最终解释权归甲方所有"这一表述。如需保留解释机制，可改为："对本合同条款的理解发生争议时，应当按照通常理解予以解释；双方对格式条款的理解存在两种以上解释的，应当作出不利于提供格式条款一方的解释。"'
+    }
+  },
+  {
+    id:'r3',level:'high',title:'争议管辖条款 — 单方指定甲方所在地法院',
+    preview:'争议解决约定"由甲方所在地人民法院管辖"，属于加重对方诉讼负担的不公平条款',
+    detail:{
+      desc:'第六条约定"协商不成的，由甲方所在地人民法院管辖"。乙方（上海）与甲方（北京）异地，该条款强制乙方到北京诉讼，显著增加乙方维权成本。虽然《民事诉讼法》第34条允许约定管辖，但《最高人民法院关于适用<民事诉讼法>的解释》第32条规定，此类格式条款若不合理地加重对方责任，人民法院可以认定无效。',
+      law:'《中华人民共和国民事诉讼法》第34条（协议管辖）\n最高人民法院关于适用《民事诉讼法》的解释第31-32条\n《民法典》第497条（格式条款无效）',
+      case:'参考案例：(2024)粤01民终1234号 — 广州中级法院认定仅约定卖方所在地管辖的格式条款因加重买方负担而无效\n(2023)京04民终789号 — 北京第四中级法院认定异地管辖格式条款限制对方主要诉讼权利',
+      advice:'建议修改为："因本合同产生的争议，双方应友好协商解决；协商不成的，任何一方均可向合同签订地/标的物所在地人民法院提起诉讼。"\n或者约定"由被告所在地人民法院管辖"更为公平。\n仲裁条款替代方案："协商不成的，应提交北京仲裁委员会/上海国际经济贸易仲裁委员会按照其仲裁规则进行仲裁。"'
+    }
+  },
+  {
+    id:'r4',level:'medium',title:'定金约定不规范 — 30%定金可能被认定为预付款',
+    preview:'第二条约定"合同总价款的30%作为定金"，定金比例超过20%法定上限',
+    detail:{
+      desc:'第二条约定"乙方应于合同签订后5个工作日内支付合同总价款的30%作为定金"。《民法典》第586条规定，定金的数额不得超过主合同标的额的20%，超过部分不产生定金的效力。30%比例意味着超过20%（即150万元×10%=15万元）的部分不适用定金罚则，可能被认定为预付款。同时，合同中同时使用了"定金""余款"等表述，需明确定金罚则的具体适用情形。',
+      law:'《中华人民共和国民法典》第586条（定金数额限制）\n《中华人民共和国民法典》第587条（定金罚则）\n《最高人民法院关于适用<民法典>有关担保制度的解释》第68条',
+      case:'参考案例：(2023)京03民终4567号 — 北京某买卖合同纠纷案，法院认定超过20%部分的15万元不适用定金罚则，按预付款处理',
+      advice:'建议修改为："乙方应于合同签订后5个工作日内支付合同总价款的20%（人民币300,000元）作为定金。超出20%部分的人民币150,000元视为预付款。"\n同时建议明确："若乙方违约，甲方不予返还定金；若甲方违约，应双倍返还定金。"'
+    }
+  },
+  {
+    id:'r5',level:'medium',title:'质量异议期仅30日 — 期限过短',
+    preview:'第四条约定质量异议期为30日，对于服务器设备而言可能不足以完成全面检测',
+    detail:{
+      desc:'第四条约定了30日的质量异议期。标的是服务器设备（50台），属于技术密集型产品，通常需要上架、通电、加载数据、压力测试等多轮检测，30日可能不足以完成完整的质量验收。《民法典》第621条允许当事人约定检验期限，但约定的期限过短，致使买受人难以在约定期限内完成全面检验的，人民法院可以认定该期限为买受人对外观瑕疵提出异议的期限，对隐蔽瑕疵不适用。',
+      law:'《中华人民共和国民法典》第620-623条（买受人的检验义务）\n《最高人民法院关于审理买卖合同纠纷案件适用法律问题的解释》第12-13条',
+      case:'参考案例：(2024)沪01民终5678号 — 法院认定服务器设备60日质量异议期合理，30日属于过短',
+      advice:'建议将异议期延长至60-90日，明确外观瑕疵与隐蔽瑕疵的区分。修改为："乙方应在标的物交付后15日内对外观、数量等表面瑕疵进行检验；对隐蔽瑕疵及技术性能指标，乙方有权在交付后90日内提出质量异议。"'
+    }
+  },
+  {
+    id:'r6',level:'medium',title:'逾期付款违约金过高 — 每日千分之五',
+    preview:'约定逾期付款按日千分之五支付违约金（年化182.5%），远超法律保护上限',
+    detail:{
+      desc:'第五条约定"乙方逾期支付价款的，按日向甲方支付合同总价款千分之五的违约金"。千分之五/日折合年化182.5%，远超《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》约定的LPR4倍上限（当前约13.6%），也显著高于《最高人民法院关于审理买卖合同纠纷案件适用法律问题的解释》第18条规定的计算标准。',
+      law:'《中华人民共和国民法典》第585条（违约金调整）\n最高人民法院关于审理买卖合同纠纷案件适用法律问题的解释第18-19条\n最高人民法院关于审理民间借贷案件适用法律若干问题的规定第25条',
+      case:'参考案例：(2023)沪0115民初34567号 — 上海浦东新区法院认定日千分之三违约金过高，调至LPR的1.5倍',
+      advice:'建议修改为："乙方逾期支付价款的，每逾期一日，应按逾期金额的万分之五（年化18.25%）向甲方支付违约金。"\n或参照人民银行同期贷款市场报价利率（LPR）的1.5倍计算。'
+    }
+  },
+  {
+    id:'r7',level:'medium',title:'所有权转移条款 — "交付即转移"缺少保留约定',
+    preview:'第三条约定所有权随交付转移，但价款未全部付清，存在乙方付清前转卖的风险',
+    detail:{
+      desc:'第三条约定"标的物所有权自交付之日起转移至乙方"，同时第二条约定余款在交付后7个工作日内支付。这意味着在乙方付清余款前，所有权已经转移至乙方。若乙方在此期间将货物转卖或设定抵押，甲方将无法主张取回权。《民法典》第641条允许当事人约定所有权保留条款以保护卖方利益。',
+      law:'《中华人民共和国民法典》第641条（所有权保留买卖）\n《最高人民法院关于审理买卖合同纠纷案件适用法律问题的解释》第25-26条',
+      case:'参考案例：(2024)沪01民终5678号 — 法院支持所有权保留条款下卖方在价款未清前保留所有权',
+      advice:'建议修改为："在乙方付清全部合同价款前，标的物所有权仍归甲方所有。乙方不得在付清全部价款前转卖、抵押或处分标的物。若乙方逾期支付余款超过30日，甲方有权解除合同并取回标的物，已支付的定金不予返还。"'
+    }
+  },
+  {
+    id:'r8',level:'medium',title:'合同效力 — 缺少签署主体授权文件核查',
+    preview:'合同双方均为法人，但未约定签约代表需提供授权委托书，存在无权代理风险',
+    detail:{
+      desc:'合同抬头列明了双方法定代表人，但应注意到：合同中仅约定"双方签字盖章之日起生效"，未要求签约代表提供《法定代表人身份证明》或《授权委托书》。若签约人并非法定代表人且无权代理，合同可能因《民法典》第171条（无权代理）而效力待定。对于150万元的合同，这一风险不可忽视。',
+      law:'《中华人民共和国民法典》第170条（职务代理）\n《中华人民共和国民法典》第171条（无权代理）\n《中华人民共和国民法典》第172条（表见代理）',
+      case:'参考案例：(2023)京03民终4567号 — 签约人仅有部门经理头衔被认定为无权代理，合同效力待定',
+      advice:'建议在合同中增加条款："双方保证签约方已获得签署本合同所需的一切必要授权。签约代表签署本合同时应当出示法定代表人的授权委托书原件。"'
+    }
+  },
+  {
+    id:'r9',level:'low',title:'交付地点约定不明确',
+    preview:'仅约定"乙方指定地点"，未明确风险承担和费用分配',
+    detail:{
+      desc:'第三条仅约定"交付至乙方指定地点"，但未明确：(1)运输费用由谁承担；(2)运输途中的风险由谁承担；(3)乙方指定地点的具体范围限制。《民法典》第603-608条对买卖合同的交付地点和风险转移有详细规定，建议明确以锁定双方权利义务。',
+      law:'《中华人民共和国民法典》第603条（交付地点）\n《民法典》第604-608条（风险负担）',
+      case:'参考案例：(2024)粤01民终1234号 — 因交付地点不明导致运输风险承担争议',
+      advice:'建议修改为："交付地点为乙方指定的位于上海市的仓库（具体地址以乙方提前3个工作日书面通知为准）。运输费用由甲方承担，运输途中的标的物毁损、灭失风险由甲方承担，自乙方签收之日起风险转移至乙方。"'
+    }
+  },
+  {
+    id:'r10',level:'low',title:'争议解决条款 — 未约定通知送达地址',
+    preview:'合同缺少法律文书送达地址条款，可能导致诉讼程序中的送达困难',
+    detail:{
+      desc:'合同第七条约定了"一式两份"等，但未包含"法律文书送达地址确认条款"。在发生争议进入诉讼程序后，若一方实际经营地址与合同载明地址不一致，将导致法院无法有效送达法律文书，可能影响诉讼进程。《最高人民法院关于进一步推进案件繁简分流优化司法资源配置的若干意见》第3条鼓励当事人在合同中约定送达地址。',
+      law:'《中华人民共和国民事诉讼法》第87-92条（送达）\n最高人民法院关于进一步推进案件繁简分流优化司法资源配置的若干意见第3条',
+      case:'参考案例：(2023)沪0115民初34567号 — 因未约定送达地址导致公告送达，诉讼周期延长6个月',
+      advice:'建议增加送达地址条款："本合同项下的通知、法律文书均应送达至各方在本合同首部载明的地址。任何一方变更地址应提前三日书面通知对方。司法机关以本合同载明地址为送达地址，邮件被退回的，退回之日视为送达之日。"'
+    }
+  }
+];
+
+// ==================== STATE ====================
+let currentPage = 'home';
+
+// ==================== NAVIGATION ====================
+function goToPage(page) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + page);
+  if (target) {
+    target.classList.add('active');
+    document.getElementById('content').scrollTop = 0;
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const nav = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (nav) nav.classList.add('active');
+  currentPage = page;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => { t.style.display = 'none'; }, 1800);
+}
+
+// ==================== CLOCK ====================
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+setInterval(updateClock, 10000);
+updateClock();
+
+// ==================== SIMULATE UPLOAD ====================
+function simulateUpload() {
+  showToast('📸 正在选择合同照片...');
+  setTimeout(() => {
+    goToPage('ocr');
+    document.getElementById('ocr-textarea').value = document.getElementById('ocr-textarea').value;
+  }, 800);
+}
+
+// ==================== ANALYSIS ====================
+function startAnalysis() {
+  goToPage('loading');
+  const steps = ['正在扫描合同条款...','正在识别法律风险...','正在匹配法律法规...','正在关联判例...','正在生成风险报告...'];
+  const stepLabels = ['合同类型识别','逐条风险扫描','法律法规匹配','关联判例检索','报告生成'];
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('loading-text');
+  const label = document.getElementById('step-label');
+  const dots = document.querySelectorAll('#analysis-steps .step');
+  let p = 0;
+
+  function tick() {
+    if (p <= 100) {
+      fill.style.width = p + '%';
+      document.getElementById('progress-label').textContent = Math.round(p) + '%';
+      const si = Math.min(Math.floor(p / 20), 4);
+      text.textContent = steps[si] || steps[4];
+      label.textContent = stepLabels[si] || '完成';
+      dots.forEach((d,i) => {
+        d.classList.remove('active','done');
+        if (i < si) d.classList.add('done');
+        else if (i === si) d.classList.add('active');
+      });
+      p += Math.random() * 5 + 2;
+      setTimeout(tick, 200 + Math.random() * 300);
+    } else {
+      // Done
+      dots.forEach(d => { d.classList.remove('active'); d.classList.add('done'); });
+      text.textContent = '✅ 分析完成！';
+      label.textContent = '生成风险报告';
+      fill.style.width = '100%';
+      document.getElementById('progress-label').textContent = '100%';
+      setTimeout(() => { generateReport(); goToPage('report'); }, 600);
+    }
+  }
+  tick();
+}
+
+// ==================== RISK DETAIL ====================
+function showRiskDetail(riskId) {
+  const risk = RISK_DATA.find(r => r.id === riskId);
+  if (!risk) return;
+
+  document.getElementById('detail-title').textContent = risk.title;
+  const lv = document.getElementById('detail-level');
+  lv.textContent = risk.level === 'high' ? '🔴 高风险' : risk.level === 'medium' ? '🟡 中风险' : '🟢 低风险';
+  lv.style.color = risk.level === 'high' ? 'var(--danger)' : risk.level === 'medium' ? 'var(--warning)' : 'var(--success)';
+
+  const d = risk.detail;
+  const cases = d.case ? d.case.split('\n').filter(l => l.trim()) : [];
+  const laws = d.law ? d.law.split('\n').filter(l => l.trim()) : [];
+
+  let html = `
+    <div style="background:var(--card);border-radius:var(--radius);padding:16px;margin:12px 0">
+      <h4>📋 风险描述</h4>
+      <p>${d.desc.replace(/\n/g,'<br>')}</p>
+
+      <h4>⚖️ 法律依据</h4>
+      ${laws.map(l => `<div class="law-ref">${l}</div>`).join('')}
+
+      <h4>📚 关联判例</h4>
+      ${cases.map(c => `<div class="case-ref">${c}</div>`).join('')}
+
+      <h4>💡 修改建议</h4>
+      <div class="advice-box">${d.advice.replace(/\n/g,'<br>')}</div>
+    </div>
+  `;
+  document.getElementById('detail-content').innerHTML = html;
+  goToPage('detail');
+}
+
+// ==================== GENERATE REPORT ====================
+function generateReport() {
+  const HIGH = RISK_DATA.filter(r => r.level === 'high');
+  const MEDIUM = RISK_DATA.filter(r => r.level === 'medium');
+  const LOW = RISK_DATA.filter(r => r.level === 'low');
+
+  function renderItems(arr) {
+    return arr.map(r => `
+      <div class="risk-item ${r.level}" onclick="showRiskDetail('${r.id}')">
+        <div class="header">
+          <div class="title">${r.title}</div>
+          <span class="level ${r.level === 'high' ? 'level-high' : r.level === 'medium' ? 'level-medium' : 'level-low'}">
+            ${r.level === 'high' ? '🔴 高风险' : r.level === 'medium' ? '🟡 中风险' : '🟢 低风险'}
+          </span>
+        </div>
+        <div class="preview">${r.preview}</div>
+        <div class="meta">
+          <span>📄 第${r.id.replace('r','')}条</span>
+          <span>⚖️ 民法典第${['585','497','34','586','621','585','641','171','603','87'][parseInt(r.id.replace('r',''))-1]}条</span>
+          <span>📚 关联判例 ${r.detail.case ? r.detail.case.split('\n').filter(l=>l.trim()).length : 0}个</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('risk-items-high').innerHTML = renderItems(HIGH);
+  document.getElementById('risk-items-medium').innerHTML = renderItems(MEDIUM);
+  document.getElementById('risk-items-low').innerHTML = renderItems(LOW);
+
+  // Animate score
+  const circle = document.getElementById('score-circle');
+  let score = 0;
+  const target = 68;
+  const iv = setInterval(() => {
+    score += 2;
+    if (score >= target) {
+      score = target;
+      clearInterval(iv);
+    }
+    circle.innerHTML = '';
+    circle.style.background = target < 60 ? `conic-gradient(var(--danger) 0deg ${target*3.6}deg,#1e293b ${target*3.6}deg 360deg)` :
+                           target < 80 ? `conic-gradient(var(--warning) 0deg ${target*3.6}deg,#1e293b ${target*3.6}deg 360deg)` :
+                           `conic-gradient(var(--success) 0deg ${target*3.6}deg,#1e293b ${target*3.6}deg 360deg)`;
+    circle.style.color = target < 60 ? 'var(--danger)' : target < 80 ? 'var(--warning)' : 'var(--success)';
+    circle.textContent = score;
+  }, 20);
+}
+
+// ==================== LAWS ====================
+let activeLawTab = 'all';
+function switchLawTab(cat, el) {
+  activeLawTab = cat;
+  document.querySelectorAll('#law-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  filterLaws();
+}
+
+function filterLaws() {
+  const q = document.getElementById('law-search').value.toLowerCase().trim();
+  const filtered = LAW_DATA.filter(l => {
+    if (activeLawTab !== 'all' && l.cat !== activeLawTab) return false;
+    if (q && !l.name.toLowerCase().includes(q) && !l.desc.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('law-list').innerHTML = filtered.map(l => `
+    <div class="law-card" onclick="showToast('📖 ${l.name} 全文内容')">
+      <span class="badge ${l.badge}">${l.tag}</span>
+      <div class="info">
+        <div class="title">${l.name}</div>
+        <div class="sub">${l.desc}</div>
+        <div class="sub" style="color:var(--text3);font-size:11px;margin-top:4px">${l.detail.slice(0,60)}...</div>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+  `).join('');
+}
+
+// ==================== HISTORY ====================
+const HISTORY_DATA = [
+  {type:'📦',color:'rgba(16,185,129,.15)',name:'买卖合同-服务器设备采购',date:'2024-07-15 14:30',score:68,scoreColor:'var(--warning)'},
+  {type:'📄',color:'rgba(37,99,235,.15)',name:'劳动合同-技术总监入职',date:'2024-07-12 10:15',score:85,scoreColor:'var(--success)'},
+  {type:'🏠',color:'rgba(245,158,11,.15)',name:'房屋租赁合同-写字楼',date:'2024-07-08 16:00',score:42,scoreColor:'var(--danger)'},
+  {type:'💰',color:'rgba(139,92,246,.15)',name:'借款合同-股东借贷',date:'2024-07-05 09:45',score:55,scoreColor:'var(--warning)'},
+  {type:'📦',color:'rgba(16,185,129,.15)',name:'买卖合同-原材料供应',date:'2024-07-01 11:20',score:72,scoreColor:'var(--warning)'},
+  {type:'🏗️',color:'rgba(239,68,68,.15)',name:'建设工程施工合同-装修',date:'2024-06-28 15:30',score:38,scoreColor:'var(--danger)'},
+  {type:'📄',color:'rgba(37,99,235,.15)',name:'保密协议-技术合作',date:'2024-06-25 13:00',score:90,scoreColor:'var(--success)'},
+  {type:'📦',color:'rgba(16,185,129,.15)',name:'买卖合同-设备采购',date:'2024-06-20 10:00',score:76,scoreColor:'var(--warning)'}
+];
+
+function renderHistory() {
+  document.getElementById('history-list').innerHTML = HISTORY_DATA.map(h => `
+    <div class="history-item" onclick="showToast('📋 ${h.name} 风险报告')">
+      <div class="type-icon" style="background:${h.color}">${h.type}</div>
+      <div class="info">
+        <div class="name">${h.name}</div>
+        <div class="date">${h.date}</div>
+      </div>
+      <div class="score">
+        <div class="num" style="color:${h.scoreColor}">${h.score}</div>
+        <div class="label">分</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==================== INIT ====================
+filterLaws();
+renderHistory();
+
+// Keyboard shortcut for upload page
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && currentPage === 'ocr') {
+    startAnalysis();
+  }
+});
+</script>
+</body>
+</html>
