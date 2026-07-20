@@ -119,11 +119,24 @@ async def analyze(text:str=Form(...), contract_type:str=Form("买卖合同"), si
 @app.post("/api/analyze/file")
 async def analyze_file(file:UploadFile=File(...), contract_type:str=Form("买卖合同"), side:str=Form("neutral")):
     content = await file.read()
-    try: text = content.decode("utf-8")
-    except UnicodeDecodeError:
-        try: text = content.decode("gbk")
-        except: text = content.decode("utf-8", errors="replace")
-    if len(text.strip()) < 10: raise HTTPException(400, "文件内容太短或无法识别")
+    text = None
+    # .docx 是 ZIP 压缩的 XML，需用 python-docx 解析
+    if file.filename and file.filename.lower().endswith('.docx'):
+        try:
+            import docx
+            import io as _io
+            doc = docx.Document(_io.BytesIO(content))
+            text = '\n'.join(p.text for p in doc.paragraphs if p.text.strip())
+        except Exception as e:
+            raise HTTPException(400, f"无法解析Word文档: {str(e)}")
+    else:
+        # 纯文本解析
+        try: text = content.decode("utf-8")
+        except UnicodeDecodeError:
+            try: text = content.decode("gbk")
+            except: text = content.decode("utf-8", errors="replace")
+    if not text or len(text.strip()) < 10:
+        raise HTTPException(400, "文件内容太短或无法识别")
     return analyzer_obj.analyze(text, contract_type, side)
 
 # ---- OCR ----
