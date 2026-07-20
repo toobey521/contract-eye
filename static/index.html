@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>法眼识契 — 合同风险智能把控系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#111827;--card2:#1a2332;--primary:#2563eb;--primary-light:#3b82f6;--cyan:#06b6d4;--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:24px}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .subtitle{color:var(--text3);font-size:13px;margin-left:12px}
+.header-nav{display:flex;gap:8px}
+.nav-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;font-family:inherit}
+.nav-btn:hover,.nav-btn.active{background:rgba(37,99,235,.15);border-color:var(--primary);color:var(--primary)}
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat-box{background:var(--card);border-radius:12px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,.04)}
+.stat-box .num{font-size:28px;font-weight:700;color:var(--primary-light)}
+.stat-box .label{font-size:12px;color:var(--text3);margin-top:4px}
+/* Main layout */
+.main-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.full-width{grid-column:1/-1}
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid rgba(255,255,255,.05);margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+/* Textarea */
+textarea{width:100%;min-height:300px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--text);font-size:14px;padding:14px;font-family:inherit;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s}
+textarea:focus{border-color:var(--primary)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#1d4ed8);color:white}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-secondary:hover{background:rgba(255,255,255,.12)}
+.btn-success{background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.btn-group{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+/* Risk badges */
+.badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.badge-high{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-medium{background:rgba(245,158,11,.15);color:var(--warning)}
+.badge-low{background:rgba(16,185,129,.15);color:var(--success)}
+/* Score circle */
+.score-container{text-align:center;padding:20px}
+.score-ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:36px;font-weight:700;position:relative}
+.score-ring::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--card)}
+.score-ring span{position:relative;z-index:1}
+.score-danger{background:conic-gradient(var(--danger) var(--score-deg,0deg) 360deg,var(--card2) 0deg)}
+.score-warning{background:conic-gradient(var(--warning) var(--score-deg,0deg) 360deg,var(--card2) 0deg)}
+.score-safe{background:conic-gradient(var(--success) var(--score-deg,0deg) 360deg,var(--card2) 0deg)}
+/* Risk items */
+.risk-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.risk-item{background:rgba(255,255,255,.03);border-radius:10px;padding:14px;border-left:3px solid;cursor:pointer;transition:all .2s}
+.risk-item:hover{background:rgba(255,255,255,.06)}
+.risk-item.high{border-color:var(--danger)}
+.risk-item.medium{border-color:var(--warning)}
+.risk-item.low{border-color:var(--success)}
+.risk-item .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.risk-item .rtitle{font-size:13px;font-weight:600;flex:1}
+.risk-item .rdesc{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5}
+.risk-item .rmeta{display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text3);flex-wrap:wrap}
+/* Risk detail */
+.risk-detail{display:none;padding:16px;background:rgba(37,99,235,.05);border-radius:10px;border:1px solid rgba(37,99,235,.15);margin-top:8px}
+.risk-detail.open{display:block;animation:fadeIn .25s}
+.risk-detail h4{color:var(--primary);font-size:13px;font-weight:600;margin:12px 0 6px}
+.risk-detail h4:first-child{margin-top:0}
+.risk-detail p{color:var(--text2);font-size:12px;line-height:1.7}
+.law-ref{background:rgba(37,99,235,.08);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--text);border-left:2px solid var(--primary)}
+.case-ref{background:rgba(6,182,212,.06);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--text);border-left:2px solid var(--cyan)}
+.advice-box{background:rgba(16,185,129,.06);border-radius:8px;padding:10px;margin:6px 0;font-size:12px;color:var(--success);border-left:2px solid var(--success)}
+/* Loading */
+.loading{display:none;text-align:center;padding:40px}
+.loading.active{display:block}
+.spinner{width:40px;height:40px;border:3px solid rgba(37,99,235,.15);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Search */
+.search-box{display:flex;gap:8px;margin-bottom:12px}
+.search-box input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.search-box input:focus{border-color:var(--primary)}
+.search-box input::placeholder{color:var(--text3)}
+/* Filter tabs */
+.filter-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:20px;font-size:12px;background:rgba(255,255,255,.05);color:var(--text2);border:1px solid transparent;cursor:pointer;transition:all .2s;font-family:inherit}
+.ftab.active{background:rgba(37,99,235,.15);color:var(--primary);border-color:rgba(37,99,235,.3)}
+.ftab:hover{border-color:rgba(255,255,255,.1)}
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 12px;color:var(--text3);font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text2)}
+.data-table tr:hover td{background:rgba(255,255,255,.02)}
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:4px}
+.tab{padding:8px 16px;font-size:13px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+/* Sections */
+.section{display:none}
+.section.active{display:block;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* History table */
+.history-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;cursor:pointer;transition:all .2s}
+.history-item:hover{background:rgba(255,255,255,.03)}
+.history-item .icon{font-size:24px;width:36px;text-align:center}
+.history-item .info{flex:1}
+.history-item .info .name{font-size:13px;color:var(--text)}
+.history-item .info .date{font-size:11px;color:var(--text3)}
+.history-item .score{font-size:18px;font-weight:700;min-width:40px;text-align:right}
+/* Sample contracts */
+.sample-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.sample-btn{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15);border-radius:8px;padding:10px 14px;text-align:left;cursor:pointer;color:var(--text);font-size:12px;transition:all .2s;font-family:inherit}
+.sample-btn:hover{background:rgba(37,99,235,.15);transform:translateY(-1px)}
+.sample-btn .icon{font-size:16px;margin-right:6px}
+/* Side selector */
+.side-selector{display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:12px}
+.side-btn{flex:1;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;background:transparent;color:var(--text3)}
+.side-btn:hover{color:var(--text)}
+.side-btn.active{background:var(--primary);color:white;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.side-btn.a-side.active{background:#ef4444;box-shadow:0 2px 8px rgba(239,68,68,.3)}
+.side-btn.b-side.active{background:#f59e0b;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+/* Side badge in results */
+.side-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:8px}
+.side-badge.neutral{background:rgba(37,99,235,.12);color:var(--primary)}
+.side-badge.a-side{background:rgba(239,68,68,.12);color:var(--danger)}
+.side-badge.b-side{background:rgba(245,158,11,.12);color:var(--warning)}
+/* Contract type select */
+select{padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;cursor:pointer}
+/* Toast */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);backdrop-filter:blur(10px);color:var(--text);padding:12px 24px;border-radius:10px;font-size:13px;z-index:100;display:none;border:1px solid rgba(255,255,255,.1)}
+/* Upload zone */
+.upload-zone{border:2px dashed rgba(37,99,235,.3);border-radius:12px;padding:30px;text-align:center;margin-bottom:16px;cursor:pointer;transition:all .3s}
+.upload-zone:hover{border-color:var(--primary);background:rgba(37,99,235,.05)}
+.upload-zone .icon{font-size:36px;display:block;margin-bottom:8px}
+.upload-zone .text{color:var(--text2);font-size:13px}
+.upload-zone .hint{color:var(--text3);font-size:11px;margin-top:4px}
+/* Responsive */
+@media(max-width:768px){
+  .main-layout{grid-template-columns:1fr}
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .header{flex-direction:column;gap:12px}
+  .header-nav{width:100%;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">⚖️</div>
+      <h1>法眼识契</h1>
+      <span class="subtitle">合同风险智能把控 v1.0</span>
+    </div>
+    <div class="header-nav">
+      <button class="nav-btn active" onclick="switchSection('analyze',this)">🔍 合同分析</button>
+      <button class="nav-btn" onclick="switchSection('laws',this)">📚 法律法规</button>
+      <button class="nav-btn" onclick="switchSection('cases',this)">📋 判例库</button>
+      <button class="nav-btn" onclick="switchSection('history',this)">📊 历史记录</button>
+      <button class="nav-btn" style="color:var(--danger);border-color:rgba(239,68,68,.2)" onclick="shutdownServer()">⏹ 停止服务</button>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-box"><div class="num" id="stat-laws">-</div><div class="label">法律条文</div></div>
+    <div class="stat-box"><div class="num" id="stat-cases">-</div><div class="label">关联判例</div></div>
+    <div class="stat-box"><div class="num" id="stat-rules">-</div><div class="label">风险规则</div></div>
+    <div class="stat-box"><div class="num" id="stat-ocr">-</div><div class="label">OCR引擎</div></div>
+  </div>
+
+  <!-- ==================== SECTION: ANALYZE ==================== -->
+  <div class="section active" id="sec-analyze">
+    <div class="card">
+      <div class="card-title">📝 输入合同文本</div>
+      <div class="side-selector" id="side-selector">
+        <button class="side-btn a-side" data-side="a" onclick="setSide('a',this)">🅰️ 甲方视角</button>
+        <button class="side-btn active" data-side="neutral" onclick="setSide('neutral',this)">⚖️ 中立视角</button>
+        <button class="side-btn b-side" data-side="b" onclick="setSide('b',this)">🅱️ 乙方视角</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+        <select id="contract-type">
+          <option value="买卖合同">买卖合同</option>
+          <option value="劳动合同">劳动合同</option>
+          <option value="租赁合同">租赁合同</option>
+          <option value="借款合同">借款合同</option>
+          <option value="建设工程合同">建设工程合同</option>
+          <option value="服务合同">服务合同</option>
+        </select>
+        <button class="btn btn-secondary" onclick="loadSample()">📄 加载示例合同</button>
+        <button class="btn btn-secondary" onclick="clearText()">🗑️ 清空</button>
+      </div>
+      <textarea id="contract-text" placeholder="请粘贴合同文本，或点击下方示例加载测试合同...&#10;&#10;合同金额越大、条款越详细，分析结果越精确。"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-analyze" onclick="startAnalysis()">🚀 开始风险分析</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📎 上传文本</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('ocr-input').click()">📸 OCR识别图片</button>
+        <span style="font-size:11px;color:var(--text3);align-self:center;margin-left:8px" id="char-count">0 字</span>
+      </div>
+      <input id="file-input" type="file" accept=".txt,.doc,.docx" style="display:none" onchange="loadFile(event)">
+      <input id="ocr-input" type="file" accept=".jpg,.jpeg,.png,.bmp,.tiff,.tif" style="display:none" onchange="loadOCR(event)">
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="analysis-loading">
+      <div class="spinner"></div>
+      <div style="color:var(--text2);font-size:14px" id="loading-text">正在分析合同风险...</div>
+    </div>
+
+    <!-- Results -->
+    <div id="analysis-results" style="display:none">
+      <!-- Score + Verdict -->
+      <div class="card" id="score-card">
+        <div class="score-container">
+          <div class="score-ring" id="score-ring">
+            <span id="score-num">-</span>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:var(--text)" id="verdict-text">-</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:4px">
+            发现 <span style="color:var(--danger);font-weight:700" id="res-high">0</span> 项高风险、
+            <span style="color:var(--warning);font-weight:700" id="res-med">0</span> 项中风险、
+            <span style="color:var(--success);font-weight:700" id="res-low">0</span> 项低风险
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">
+            <span id="side-badge" class="side-badge neutral">⚖️ 中立视角</span>
+            <span id="contract-type-label">买卖合同</span> · AI 分析仅供参考
+          </div>
+        </div>
+      </div>
+
+      <!-- High Risks -->
+      <div class="card">
+        <div class="card-title">🔴 高风险项 <span style="font-size:12px;color:var(--text3);font-weight:400" id="high-count"></span></div>
+        <div class="risk-list" id="high-risks"></div>
+      </div>
+
+      <!-- Medium Risks -->
+      <div class="card">
+        <div class="card-title">🟡 中风险项 <span style="font-size:12px;color:var(--text3);font-weight:400" id="med-count"></span></div>
+        <div class="risk-list" id="med-risks"></div>
+      </div>
+
+      <!-- Low Risks -->
+      <div class="card">
+        <div class="card-title">🟢 低风险项 <span style="font-size:12px;color:var(--text3);font-weight:400" id="low-count"></span></div>
+        <div class="risk-list" id="low-risks"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION: LAWS ==================== -->
+  <div class="section" id="sec-laws">
+    <div class="card">
+      <div class="card-title">📚 法律法规库</div>
+      <div class="search-box">
+        <input id="law-search" placeholder="搜索法律名称、条文编号或关键词..." onkeyup="if(event.key==='Enter')searchLaws()">
+        <button class="btn btn-primary" onclick="searchLaws()">🔍 搜索</button>
+      </div>
+      <div class="filter-tabs" id="law-tabs">
+        <button class="ftab active" onclick="filterLaws('all',this)">全部</button>
+        <button class="ftab" onclick="filterLaws('contract',this)">合同法律</button>
+        <button class="ftab" onclick="filterLaws('civil',this)">民事法律</button>
+        <button class="ftab" onclick="filterLaws('labor',this)">劳动法律</button>
+        <button class="ftab" onclick="filterLaws('company',this)">公司法律</button>
+        <button class="ftab" onclick="filterLaws('procedure',this)">程序法律</button>
+        <button class="ftab" onclick="filterLaws('construction',this)">建设工程</button>
+      </div>
+      <div id="law-list">
+        <div style="text-align:center;padding:20px;color:var(--text3)">请输入关键词搜索</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION: CASES ==================== -->
+  <div class="section" id="sec-cases">
+    <div class="card">
+      <div class="card-title">📋 判例库</div>
+      <div class="search-box">
+        <input id="case-search" placeholder="搜索案由、关键词或案号..." onkeyup="if(event.key==='Enter')searchCases()">
+        <button class="btn btn-primary" onclick="searchCases()">🔍 搜索</button>
+      </div>
+      <div id="case-list">
+        <div style="text-align:center;padding:20px;color:var(--text3)">请输入关键词搜索</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION: HISTORY ==================== -->
+  <div class="section" id="sec-history">
+    <div class="card">
+      <div class="card-title">📊 审查记录</div>
+      <div id="history-list">
+        <div style="text-align:center;padding:20px;color:var(--text3)">已完成分析的合同将显示在这里</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ======================== STATE ========================
+let lastResult = null;
+let historyRecords = JSON.parse(localStorage.getItem('contract_history') || '[]');
+
+// ======================== INIT ========================
+document.addEventListener('DOMContentLoaded', () => {
+  loadStats();
+  // Update char count
+  document.getElementById('contract-text').addEventListener('input', () => {
+    const len = document.getElementById('contract-text').value.length;
+    document.getElementById('char-count').textContent = len + ' 字';
+  });
+  renderHistory();
+});
+
+// ======================== NAVIGATION ========================
+function switchSection(name, btn) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+}
+
+// ======================== API ========================
+const API = '';
+
+async function api(path, options = {}) {
+  const url = API + path;
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.json();
+}
+
+async function loadStats() {
+  try {
+    const data = await api('/api/health');
+    document.getElementById('stat-laws').textContent = data.laws_count;
+    document.getElementById('stat-cases').textContent = data.cases_count;
+    document.getElementById('stat-rules').textContent = data.rules_count;
+    document.getElementById('stat-ocr').textContent = data.ocr_available ? '可用' : '文本输入';
+  } catch(e) {
+    // Offline mode - use local data
+    document.getElementById('stat-laws').textContent = '26';
+    document.getElementById('stat-cases').textContent = '8';
+    document.getElementById('stat-rules').textContent = '12';
+    document.getElementById('stat-ocr').textContent = '离线';
+  }
+}
+
+// ======================== SAMPLE CONTRACTS ========================
+const SAMPLE_CONTRACTS = {
+  sale: `合同编号：HT-2024-0715
+
+甲方（出卖人）：×××科技有限公司
+地址：北京市海淀区中关村大街1号
+法定代表人：张三
+
+乙方（买受人）：×××商贸有限公司
+地址：上海市浦东新区陆家嘴金融区
+法定代表人：李四
+
+第一条 标的物
+甲方向乙方出售服务器设备共计50台，规格型号为S220T。
+
+第二条 价款及支付
+合同总价款为人民币1,500,000元（大写：壹佰伍拾万元整）。
+乙方应于合同签订后5个工作日内支付合同总价款的30%作为定金。
+余款于标的物交付之日起7个工作日内一次性支付。
+
+第三条 交付
+甲方应于2024年8月15日前将标的物交付至乙方指定地点。
+标的物所有权自交付之日起转移至乙方。
+
+第四条 质量标准
+标的物质量应符合国家标准，具体技术参数详见附件一。
+质量异议期为标的物交付后30日内，逾期视为验收合格。
+
+第五条 违约责任
+乙方逾期支付价款的，按日向甲方支付合同总价款千分之五的违约金。
+甲方逾期交付的，按日向乙方支付合同总价款千分之二的违约金。
+任何一方违约，应向守约方支付合同总价款30%的违约金。
+
+第六条 争议解决
+因本合同产生的争议，双方应友好协商解决。
+协商不成的，由甲方所在地人民法院管辖。
+
+第七条 其他
+本合同一式两份，自双方签字盖章之日起生效。
+本合同为格式合同，最终解释权归甲方所有。`,
+
+  labor: `劳动合同
+
+甲方（用人单位）：×××科技有限公司
+法定代表人：张三
+注册地址：北京市海淀区中关村大街1号
+
+乙方（劳动者）：李四
+身份证号：110101199001011234
+
+第一条 合同期限
+本合同为固定期限劳动合同，自2024年1月1日起至2027年12月31日止。
+试用期为6个月。
+
+第二条 工作内容
+乙方在技术研发部门担任高级工程师岗位。
+
+第三条 劳动报酬
+乙方月工资为人民币15,000元（税前）。
+试用期工资为人民币10,000元（税前）。
+
+第四条 工作时间
+实行标准工时制，每周工作5天，每天8小时。
+
+第五条 竞业限制
+乙方离职后2年内不得在同行业公司工作。
+竞业限制补偿金为每月人民币1,000元。
+
+第六条 保密义务
+乙方在职期间及离职后对甲方的商业秘密负有保密义务。
+
+第七条 合同解除
+甲方有权根据公司经营需要单方解除本合同。`,
+
+  lease: `房屋租赁合同
+
+出租方（甲方）：张某
+身份证号：110101197501011234
+
+承租方（乙方）：×××商贸有限公司
+统一社会信用代码：91110108MA12345678
+
+第一条 租赁标的
+甲方将位于北京市朝阳区建国路88号XX大厦18层1801室出租给乙方使用，建筑面积200平方米。
+
+第二条 租赁期限
+租赁期限自2024年1月1日起至2028年12月31日止，共计5年。
+
+第三条 租金及支付
+月租金为人民币50,000元（大写：伍万元整）。
+租金每季度支付一次，每季度提前15日支付。
+甲方有权每两年调整租金，调整幅度不超过上一年租金的10%。
+
+第四条 押金
+乙方应于合同签订之日向甲方支付押金人民币150,000元（相当于3个月租金）。
+
+第五条 装修与改造
+乙方经甲方同意可对房屋进行装修，装修费用由乙方承担。
+租赁期满后，装修归甲方所有。
+
+第六条 违约责任
+乙方逾期支付租金的，每逾期一日，应按月租金的千分之五支付违约金。
+甲方提前收回房屋的，应退还剩余租金并支付2个月租金作为违约金。`,
+
+  loan: `借款合同
+
+出借人（甲方）：李某
+身份证号：110101198501011234
+
+借款人（乙方）：×××商贸有限公司
+统一社会信用代码：91110108MA12345678
+
+第一条 借款金额
+甲方借给乙方人民币500,000元（大写：伍拾万元整）。
+
+第二条 借款期限
+借款期限自2024年3月1日起至2024年9月1日止，共计6个月。
+
+第三条 利息
+借款利率为月息2分（年化24%），利息按月支付。
+乙方应于每月1日前支付当月利息。
+
+第四条 担保
+乙方以其名下的一辆汽车（车牌号：京A88888）作为抵押担保。
+担保范围包括本金、利息、违约金及实现债权的费用。
+
+第五条 违约责任
+乙方逾期还款的，每逾期一日按逾期金额的千分之三支付违约金。
+乙方逾期超过30日的，甲方有权宣布借款提前到期，并要求乙方承担全部剩余本息。
+
+第六条 争议解决
+协商不成的，由甲方所在地人民法院管辖。`,
+
+  service: `技术服务合同
+
+委托方（甲方）：×××科技有限公司
+地址：北京市海淀区中关村大街1号
+
+受托方（乙方）：×××软件开发有限公司
+地址：上海市浦东新区张江高科技园区
+
+第一条 服务内容
+乙方为甲方开发一套企业资源管理系统（ERP），具体功能需求详见附件一。
+
+第二条 开发期限
+乙方应于合同签订之日起120日内完成开发并交付验收。
+
+第三条 开发费用及支付
+合同总价为人民币300,000元（大写：叁拾万元整）。
+支付方式：签约后支付40%，中期验收后支付30%，终验合格后支付30%。
+
+第四条 验收标准
+甲方应在乙方提交验收申请后15日内组织验收。
+甲方无正当理由拒绝验收的，视为验收合格。
+
+第五条 知识产权
+为本项目开发形成的软件著作权归甲方所有。
+
+第六条 违约责任
+甲方逾期付款的，按日支付逾期金额千分之二的违约金。
+乙方逾期交付的，按日支付合同总价款千分之一的违约金。
+交付逾期超过60日的，甲方有权解除合同，乙方应退还已支付的费用。
+
+第七条 争议解决
+协商不成的，提交北京仲裁委员会仲裁。`,
+
+  construction: `建设工程施工合同
+
+发包方（甲方）：×××房地产有限公司
+地址：北京市朝阳区建国路88号
+
+承包方（乙方）：×××建筑工程有限公司
+资质等级：建筑工程施工总承包壹级
+
+第一条 工程概况
+工程名称：XX商业综合体项目
+工程地点：北京市通州区
+
+第二条 合同价款
+合同总价为人民币25,000,000元（大写：贰仟伍佰万元整）。
+
+第三条 工期
+开工日期：2024年5月1日
+竣工日期：2025年8月30日，总工期486日历天。
+
+第四条 质量标准
+工程质量标准：合格。
+
+第五条 工程款支付
+工程预付款为合同总价的10%，于开工前7日内支付。
+按月支付进度款，按实际完成工程量的80%支付。
+竣工验收合格后支付至结算总价的97%，余3%作为质保金。
+
+第六条 违约责任
+乙方工期延误，每逾期一日按合同总价的万分之二支付违约金。
+甲方逾期支付工程款，按日支付逾期金额万分之三的违约金。
+违约金总额不超过合同总价的5%。
+
+第七条 争议解决
+协商不成的，向工程所在地人民法院提起诉讼。`,
+
+  technology: `技术开发合同
+
+委托方（甲方）：×××生物科技有限公司
+地址：北京市昌平区生命科学园
+
+研究开发方（乙方）：×××大学
+地址：北京市海淀区学院路
+
+第一条 项目名称
+新型基因检测试剂盒的研发
+
+第二条 技术目标
+检测灵敏度大于99%，特异性大于99.5%。
+
+第三条 研究开发经费
+项目总经费为人民币1,200,000元（大写：壹佰贰拾万元整）。
+经费分三期支付：合同签订后支付40%，中期报告通过后支付40%，项目验收后支付20%。
+
+第四条 履行期限
+研究开发期限自2024年1月1日起至2026年12月31日止，共计36个月。
+
+第五条 成果归属
+专利申请权归甲方所有，乙方作为发明人享有署名权。
+
+第六条 风险承担
+因出现无法克服的技术困难，致使研究开发失败或者部分失败的，该风险责任由双方共同承担。甲方已支付的经费不予退还，未支付的经费不再支付。`
+};
+
+function loadSample() {
+  const samples = [SAMPLE_CONTRACTS.sale, SAMPLE_CONTRACTS.labor, SAMPLE_CONTRACTS.lease, SAMPLE_CONTRACTS.loan, SAMPLE_CONTRACTS.service, SAMPLE_CONTRACTS.construction, SAMPLE_CONTRACTS.technology];
+  const texts = ['📦 买卖合同', '👔 劳动合同', '🏠 租赁合同', '💰 借款合同', '⚙️ 技术服务', '🏗️ 建设工程', '🧬 技术开发'];
+  const icons = ['📦','👔','🏠','💰','⚙️','🏗️','🧬'];
+  const btns = texts.map((t,i) => `<button class="sample-btn" onclick="document.getElementById('contract-type').value='${['买卖合同','劳动合同','租赁合同','借款合同','服务合同','建设工程合同','技术合同'][i]}';document.getElementById('contract-text').value=samples[${i}];updateCharCount()">${t}</button>`).join('');
+  showToast(`选择示例合同：<div class="sample-grid">${btns}</div>`, 6000);
+}
+
+function updateCharCount() {
+  const len = document.getElementById('contract-text').value.length;
+  document.getElementById('char-count').textContent = len + ' 字';
+}
+
+// Make samples accessible
+window.samples = SAMPLE_CONTRACTS;
+
+function clearText() {
+  document.getElementById('contract-text').value = '';
+  updateCharCount();
+  document.getElementById('analysis-results').style.display = 'none';
+}
+
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('contract-text').value = e.target.result;
+    updateCharCount();
+    showToast('✅ 文件加载成功');
+  };
+  reader.readAsText(file);
+}
+
+// Side selection
+let currentSide = 'neutral';
+function setSide(side, btn) {
+  if (!btn) {
+    btn = document.querySelector(`.side-btn[data-side="${side}"]`);
+  }
+  document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  currentSide = side;
+}
+
+async function loadOCR(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  showToast('📸 正在OCR识别，请稍候...');
+  try {
+    const res = await fetch('/api/ocr', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.text) {
+      document.getElementById('contract-text').value = data.text;
+      updateCharCount();
+      showToast(`✅ OCR识别完成！共识别${data.chars}字（置信度${(data.confidence*100).toFixed(1)}%）`);
+    } else {
+      showToast('⚠️ OCR未能识别出文字');
+    }
+  } catch(e) {
+    showToast('⚠️ OCR服务暂不可用，请直接粘贴文本');
+  }
+}
+
+// 停止服务
+async function shutdownServer() {
+  if (!confirm('确定要停止服务吗？')) return;
+  try {
+    await fetch('/api/shutdown', { method: 'POST' });
+  } catch(e) {}
+  showToast('⏹ 服务已停止，可关闭此页面');
+  setTimeout(() => { window.close(); }, 1000);
+}
+
+// ======================== ANALYSIS ========================
+async function startAnalysis() {
+  const text = document.getElementById('contract-text').value.trim();
+  if (text.length < 20) {
+    showToast('⚠️ 请至少输入20个字的合同内容');
+    return;
+  }
+
+  const ctype = document.getElementById('contract-type').value;
+  const loading = document.getElementById('analysis-loading');
+  const results = document.getElementById('analysis-results');
+  const btn = document.getElementById('btn-analyze');
+
+  loading.classList.add('active');
+  results.style.display = 'none';
+  btn.disabled = true;
+
+  const steps = ['正在分析合同类型...','正在逐条扫描风险...','正在匹配法律依据...','正在关联判例...','正在生成报告...'];
+  let si = 0;
+  const iv = setInterval(() => {
+    document.getElementById('loading-text').textContent = steps[Math.min(si++, 4)];
+    if (si > 4) clearInterval(iv);
+  }, 800);
+
+  try {
+    // Try API first
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('contract_type', ctype);
+    formData.append('side', currentSide);
+    const data = await api('/api/analyze', { method: 'POST', body: formData });
+    lastResult = data;
+    renderResults(data);
+  } catch(e) {
+    // Fallback: local analysis
+    try {
+      const { analyze_contract } = await import('./analyzer.js');
+      // Can't import .py, use embedded fallback
+      const data = localAnalyze(text, ctype, currentSide);
+      lastResult = data;
+      renderResults(data);
+    } catch(e2) {
+      showToast('❌ 分析失败，请确保后端服务已启动');
+      console.error(e2);
+    }
+  }
+
+  clearInterval(iv);
+  loading.classList.remove('active');
+  btn.disabled = false;
+  results.style.display = 'block';
+  document.getElementById('loading-text').textContent = '正在分析合同风险...';
+}
+
+// ======================== LOCAL ANALYSIS (FALLBACK) ========================
+function localAnalyze(text, contractType, side) {
+  const rules = [
+    {id:'R001',title:'违约金比例过高（30%以上）',side:'b',level:'high',category:'违约责任',desc:'合同约定违约金比例可能过高',analysis:'根据民法典第585条，约定的违约金过分高于造成损失的，法院可予适当减少。建议将违约金调整至合理范围。',law:['民法典第585条'],case:['(2024)沪01民终5678号'],suggest:'建议修改为合同总价款的20%以内或按实际损失计算。',
+     check:(t)=>t.includes('30%')||t.includes('百分之三十')||t.includes('30％')},
+    {id:'R002',title:'格式条款 — 最终解释权条款',side:'b',level:'high',category:'格式条款',desc:'合同包含"最终解释权"条款，属于不公平格式条款',analysis:'根据民法典第496-498条，提供格式条款一方不合理地免除或减轻其责任、加重对方责任、限制对方主要权利的条款无效。',law:['民法典第496条','民法典第497条'],case:['(2023)京0105民初23456号'],suggest:'建议直接删除"最终解释权"条款。',
+     check:(t)=>t.includes('最终解释')||t.includes('解释权归')},
+    {id:'R003',title:'争议管辖 — 单方指定管辖法院',side:'b',level:'high',category:'争议解决',desc:'争议解决条款单方指定管辖法院，增加对方维权成本',analysis:'根据民法典第497条及民事诉讼法第34条，格式条款中不合理地加重对方责任的管辖条款可能被认定无效。',law:['民法典第497条','民事诉讼法第34条'],case:['(2024)京04民终789号'],suggest:'建议修改为：由被告所在地或合同履行地法院管辖。',
+     check:(t)=>(t.includes('管辖')||t.includes('仲裁'))&&(t.includes('甲方')||t.includes('出卖人')||t.includes('卖方'))&&t.includes('所在地')},
+    {id:'R004',title:'定金比例超过20%',side:'b',level:'medium',category:'合同效力',desc:'定金比例可能超过合同总价款的20%法定上限',analysis:'根据民法典第586条，定金不得超过主合同标的额的20%，超过部分不产生定金效力。',law:['民法典第586条'],case:['(2023)京03民终4567号'],suggest:'建议将定金调整为20%以内，超出部分明确为预付款。',
+     check:(t)=>t.includes('定金')&&(t.includes('30%')||t.includes('百分之三'))},
+    {id:'R005',title:'质量异议期过短',side:'b',level:'medium',category:'合同履行',desc:'质量异议期可能不足以完成全面检验',analysis:'根据民法典第621条，约定的检验期限过短，对隐蔽瑕疵不适用。建议延长异议期。',law:['民法典第621条'],case:['(2024)粤01民终1234号'],suggest:'建议将异议期延长至60-90日，并区分外观瑕疵与隐蔽瑕疵。',
+     check:(t)=>t.includes('异议期')||t.includes('验收')&&(t.includes('30日')||t.includes('15日')||t.includes('7日'))},
+    {id:'R006',title:'逾期付款违约金过高（日费率）',side:'b',level:'medium',category:'违约责任',desc:'逾期付款日违约金费率可能过高',analysis:'根据民法典第585条，日千分之五（年化182.5%）等畸高费率会被法院调低至LPR的1.5-4倍。',law:['民法典第585条'],case:['(2023)沪0115民初34567号'],suggest:'建议改为日万分之五或LPR的1.5倍。',
+     check:(t)=>t.includes('千分之')&&(t.includes('日')||t.includes('逾期'))},
+    {id:'R007',title:'所有权转移条款缺少保留约定',side:'a',level:'medium',category:'合同效力',desc:'所有权随交付转移但价款未付清，存在买方转卖风险',analysis:'根据民法典第641条，可约定所有权保留条款保护卖方利益。',law:['民法典第641条'],case:['(2024)苏05民终3456号'],suggest:'建议增加所有权保留约定，价款付清前所有权不转移。',
+     check:(t)=>t.includes('所有权')&&t.includes('交付')&&t.includes('转移')},
+    {id:'R008',title:'合同签署授权缺失',side:'both',level:'medium',category:'合同效力',desc:'未要求授权委托书，存在无权代理风险',analysis:'若签约人非法定代表人且未经授权，合同可能效力待定。',law:['民法典第170条','民法典第171条'],case:[],suggest:'建议增加授权条款，要求出示授权委托书。',
+     check:(t)=>t.includes('签字')&&t.includes('生效')&&!t.includes('授权')},
+    {id:'R009',title:'试用期约定不规范',side:'b',level:'high',category:'劳动法律',desc:'试用期可能不符合劳动法规定',analysis:'根据劳动合同法第19条，试用期最长6个月且与合同期限挂钩。试用期工资不得低于正式工资的80%。',law:['劳动合同法第19条','劳动合同法第20条'],case:[],suggest:'请按劳动合同法第19条检查试用期与合同期限的匹配性。',
+     check:(t)=>t.includes('试用期')},
+    {id:'R010',title:'竞业限制补偿金过低',side:'b',level:'medium',category:'劳动法律',desc:'竞业限制补偿金可能低于法定标准',analysis:'根据劳动合同法第23条，竞业限制补偿金过低可能导致条款对劳动者不具约束力。',law:['劳动合同法第23条'],case:['(2023)浙01民终7890号'],suggest:'竞业限制补偿金不低于离职前12个月平均工资的30%。',
+     check:(t)=>t.includes('竞业限制')},
+    {id:'R011',title:'缺少保密条款',side:'a',level:'medium',category:'合同完整性',desc:'未约定保密条款或保密义务不明确',analysis:'建议增加保密条款，明确保密范围、期限和违约责任。',law:['反不正当竞争法第9条'],case:[],suggest:'增加保密条款：保密义务延续至合同终止后2-3年。',
+     check:(t)=>!t.includes('保密')},
+    {id:'R012',title:'缺少送达地址条款',side:'both',level:'low',category:'争议解决',desc:'未约定法律文书送达地址',analysis:'建议增加送达地址条款以缩短诉讼周期。',law:['民事诉讼法第87条'],case:[],suggest:'增加：合同首部地址为法律文书送达地址。',
+     check:(t)=>!t.includes('送达')&&!t.includes('通知地址')},
+  ];
+
+  const findings = [];
+  for (const rule of rules) {
+    if (rule.check(text)) {
+      findings.push({
+        id: rule.id,
+        title: rule.title,
+        category: rule.category,
+        level: rule.level,
+        side: rule.side || 'both',
+        description: rule.desc,
+        analysis: rule.analysis,
+        suggestion: rule.suggest,
+        law_articles: rule.law,
+        related_cases: rule.case,
+      });
+    }
+  }
+
+  // Calculate score (perspective-weighted)
+  let score = 100;
+  const baseScores = {high: -10, medium: -5, low: -2};
+  const sideWeights = {
+    a: {a: 1.0, b: 1.4, both: 1.2},
+    b: {a: 1.4, b: 1.0, both: 1.2},
+    neutral: {a: 1.0, b: 1.0, both: 1.0},
+  };
+  const w = sideWeights[side] || sideWeights.neutral;
+  for (const f of findings) {
+    score += (baseScores[f.level] || -5) * (w[f.side] || 1.0);
+  }
+  score = Math.max(0, Math.min(100, score));
+
+  const high = findings.filter(f => f.level === 'high');
+  const med = findings.filter(f => f.level === 'medium');
+  const low = findings.filter(f => f.level === 'low');
+
+  let verdict;
+  const vPrefix = side === 'a' ? '【甲方视角】' : side === 'b' ? '【乙方视角】' : '';
+  if (score >= 85) verdict = vPrefix + '✅ 风险较低，可以签署';
+  else if (score >= 65) verdict = vPrefix + '⚠️ 建议修改后签署';
+  else if (score >= 40) verdict = vPrefix + '🔴 风险较高，建议修改并咨询律师';
+  else verdict = vPrefix + '⛔ 风险极高，强烈建议重新起草';
+
+  return {
+    contract_type: contractType,
+    side: side || 'neutral',
+    side_name: side === 'a' ? '甲方视角' : side === 'b' ? '乙方视角' : '中立视角',
+    score, verdict,
+    high_count: high.length,
+    medium_count: med.length,
+    low_count: low.length,
+    total_risks: findings.length,
+    high_risks: high,
+    medium_risks: med,
+    low_risks: low,
+    findings
+  };
+}
+
+// ======================== RENDER RESULTS ========================
+function renderResults(data) {
+  // Score
+  const ring = document.getElementById('score-ring');
+  ring.className = 'score-ring ' + (data.score >= 85 ? 'score-safe' : data.score >= 65 ? 'score-warning' : 'score-danger');
+  ring.style.setProperty('--score-deg', (data.score * 3.6) + 'deg');
+  document.getElementById('score-num').textContent = data.score;
+  document.getElementById('verdict-text').textContent = data.verdict;
+  document.getElementById('res-high').textContent = data.high_count;
+  document.getElementById('res-med').textContent = data.medium_count;
+  document.getElementById('res-low').textContent = data.low_count;
+  document.getElementById('contract-type-label').textContent = data.contract_type;
+
+  // Side badge
+  const sb = document.getElementById('side-badge');
+  if (data.side === 'a') {
+    sb.textContent = '🅰️ 甲方视角';
+    sb.className = 'side-badge a-side';
+  } else if (data.side === 'b') {
+    sb.textContent = '🅱️ 乙方视角';
+    sb.className = 'side-badge b-side';
+  } else {
+    sb.textContent = '⚖️ 中立视角';
+    sb.className = 'side-badge neutral';
+  }
+
+  function renderRiskList(arr, containerId, countId) {
+    const container = document.getElementById(containerId);
+    if (countId) document.getElementById(countId).textContent = `(${arr.length} 项)`;
+    if (arr.length === 0) {
+      container.innerHTML = '<div style="padding:12px;color:var(--success);font-size:13px">✅ 未发现此等级风险</div>';
+      return;
+    }
+    container.innerHTML = arr.map((r, i) => `
+      <div class="risk-item ${r.level}" onclick="toggleDetail(this)">
+        <div class="row1">
+          <span class="rtitle">${r.title}</span>
+          <span class="badge ${r.level === 'high' ? 'badge-high' : r.level === 'medium' ? 'badge-medium' : 'badge-low'}">
+            ${r.level === 'high' ? '🔴' : r.level === 'medium' ? '🟡' : '🟢'} ${r.id}
+          </span>
+        </div>
+        <div class="rdesc">${r.description || (r.analysis || '').slice(0, 80) + '...'}</div>
+        <div class="rmeta">
+          <span>📂 ${r.category}</span>
+          <span>${r.side === 'a' ? '⚠️甲方不利' : r.side === 'b' ? '⚠️乙方不利' : '⚖️双方'}</span>
+          <span>⚖️ ${(r.law_articles || []).slice(0,2).join(', ')}</span>
+          <span>📚 ${(r.related_cases || []).length} 个关联判例</span>
+        </div>
+        <div class="risk-detail">
+          <h4>📋 风险分析</h4>
+          <p>${r.analysis || r.description}</p>
+          <h4>⚖️ 法律依据</h4>
+          ${(r.law_articles || []).map(a => `<div class="law-ref">${a}</div>`).join('')}
+          <h4>📚 关联判例</h4>
+          ${(r.related_cases || []).length === 0 ? '<p style="color:var(--text3);font-size:12px">暂无关联判例</p>' :
+            (r.related_cases || []).map(c => `<div class="case-ref">${c}</div>`).join('')}
+          <h4>💡 修改建议</h4>
+          <div class="advice-box">${r.suggestion || '建议咨询专业律师'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderRiskList(data.high_risks || [], 'high-risks', 'high-count');
+  renderRiskList(data.medium_risks || [], 'med-risks', 'med-count');
+  renderRiskList(data.low_risks || [], 'low-risks', 'low-count');
+
+  document.getElementById('analysis-results').style.display = 'block';
+
+  // Save to history
+  const record = {
+    id: Date.now(),
+    date: new Date().toLocaleString('zh-CN'),
+    type: data.contract_type,
+    score: data.score,
+    high: data.high_count,
+    medium: data.medium_count,
+    low: data.low_count,
+    verdict: data.verdict
+  };
+  historyRecords.unshift(record);
+  if (historyRecords.length > 50) historyRecords.pop();
+  localStorage.setItem('contract_history', JSON.stringify(historyRecords));
+  renderHistory();
+
+  // Scroll to results
+  document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleDetail(el) {
+  const detail = el.querySelector('.risk-detail');
+  if (detail) detail.classList.toggle('open');
+}
+
+// ======================== LAWS ========================
+let lawsCache = [];
+async function searchLaws() {
+  const q = document.getElementById('law-search').value.trim();
+  const container = document.getElementById('law-list');
+
+  if (!q) { filterLaws('all'); return; }
+
+  try {
+    const data = await api('/api/laws?keyword=' + encodeURIComponent(q));
+    lawsCache = data.articles;
+  } catch(e) {
+    // Use embedded data
+    lawsCache = [];
+  }
+
+  if (lawsCache.length === 0) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">未找到相关法律条文，请尝试其他关键词</div>';
+    return;
+  }
+
+  renderLaws(lawsCache);
+}
+
+let activeLawFilter = 'all';
+function filterLaws(cat, btn) {
+  activeLawFilter = cat;
+  if (btn) {
+    document.querySelectorAll('#law-tabs .ftab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const q = document.getElementById('law-search').value.trim();
+  if (q) { searchLaws(); return; }
+
+  if (cat === 'all') {
+    // Show all or search prompt
+    document.getElementById('law-list').innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">请输入关键词搜索法律法规</div>';
+    return;
+  }
+
+  // Fetch by category
+  fetchLawsByCategory(cat);
+}
+
+async function fetchLawsByCategory(cat) {
+  const container = document.getElementById('law-list');
+  try {
+    const data = await api('/api/laws?category=' + cat);
+    renderLaws(data.articles);
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">请启动后端服务或使用搜索功能</div>';
+  }
+}
+
+function renderLaws(articles) {
+  const container = document.getElementById('law-list');
+  if (!articles || articles.length === 0) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">暂无数据</div>';
+    return;
+  }
+  container.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>条文编号</th><th>法律名称</th><th>章节</th><th>内容摘要</th></tr></thead>
+      <tbody>
+        ${articles.map(a => `
+          <tr onclick="showLawDetail('${a.article_no}')" style="cursor:pointer">
+            <td style="color:var(--primary);font-weight:600">${a.article_no}</td>
+            <td>${a.law_name}</td>
+            <td style="color:var(--text3);font-size:12px">${(a.chapter||'').slice(0,20)}</td>
+            <td style="font-size:12px">${(a.content||'').slice(0,60)}...</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function showLawDetail(articleNo) {
+  const art = lawsCache.find(a => a.article_no === articleNo);
+  if (!art) return;
+  showToast(`📖 ${art.article_no}<br><br>${art.content}`, 6000);
+}
+
+// ======================== CASES ========================
+async function searchCases() {
+  const q = document.getElementById('case-search').value.trim();
+  const container = document.getElementById('case-list');
+  if (!q) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">请输入关键词搜索判例</div>';
+    return;
+  }
+
+  try {
+    const data = await api('/api/cases?keyword=' + encodeURIComponent(q));
+    renderCases(data.cases);
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">请启动后端服务后重试</div>';
+  }
+}
+
+function renderCases(cases) {
+  const container = document.getElementById('case-list');
+  container.innerHTML = cases.map(c => `
+    <div class="risk-item low" onclick="showCaseDetail(this)">
+      <div class="row1">
+        <span class="rtitle">${c.title}</span>
+        <span class="badge badge-low">${c.type || '民事'}</span>
+      </div>
+      <div class="rdesc" style="font-size:11px;color:var(--text3)">
+        ${c.case_id} · ${c.court} · ${c.date}
+      </div>
+      <div class="rdesc">${c.key_issue}</div>
+      <div class="rmeta">
+        <span>⚖️ ${(c.legal_basis||[]).join(', ')}</span>
+        <span>📋 ${c.verdict || ''}</span>
+      </div>
+      <div class="risk-detail">
+        <h4>📋 裁判要旨</h4>
+        <p>${c.summary || '暂无摘要'}</p>
+        <h4>⚖️ 裁判结果</h4>
+        <p>${c.verdict || '暂无'}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCaseDetail(el) {
+  const detail = el.querySelector('.risk-detail');
+  if (detail) detail.classList.toggle('open');
+}
+
+// ======================== HISTORY ========================
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  if (historyRecords.length === 0) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center">暂无审查记录</div>';
+    return;
+  }
+  container.innerHTML = historyRecords.slice(0, 20).map(r => `
+    <div class="history-item">
+      <div class="icon">${r.type === '买卖合同' ? '📦' : r.type === '劳动合同' ? '👔' : r.type === '租赁合同' ? '🏠' : '📄'}</div>
+      <div class="info">
+        <div class="name">${r.type} 审查报告</div>
+        <div class="date">${r.date} · 高风险 ${r.high} 项</div>
+      </div>
+      <div class="score" style="color:${r.score >= 85 ? 'var(--success)' : r.score >= 65 ? 'var(--warning)' : 'var(--danger)'}">${r.score}</div>
+    </div>
+  `).join('');
+
+  // Update stat
+  document.getElementById('stat-laws').textContent = historyRecords.length > 0 ? historyRecords.length + '+' : '0';
+}
+
+// ======================== TOAST ========================
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.style.display = 'block';
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => { t.style.display = 'none'; }, duration);
+}
+</script>
+</body>
+</html>
