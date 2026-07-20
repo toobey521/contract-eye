@@ -190,9 +190,9 @@ if __name__ == "__main__":
     print(f"  法律条文: {len(db.articles)} 条  |  判例: {len(db.cases)} 个  |  规则: {len(analyzer_obj.rules)} 条")
     print(f"  OCR引擎: {'可用' if _OCR_AVAILABLE else '未安装（仍可文本输入）'}")
     print("=" * 50)
-    print("  ▶ 正在启动服务...")
-    print("  ▶ 网页加载后，点顶栏 [⏹ 停止服务] 退出")
-    print("  ▶ 直接关闭浏览器标签页 = 服务仍在运行")
+    print("  >> 正在启动服务...")
+    print("  >> 网页加载后，点顶栏 [停止服务] 退出")
+    print("  >> 直接关闭浏览器标签页 = 服务仍在运行")
     print("    如需彻底退出，请关闭本窗口或点 [停止服务]")
     print("=" * 50)
 
