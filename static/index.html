@@ -611,6 +611,31 @@ function clearText() {
 function loadFile(event) {
   const file = event.target.files[0];
   if (!file) return;
+  
+  // .docx 文件发到后端解析，其他文件前端直接读
+  if (file.name && file.name.toLowerCase().endsWith('.docx')) {
+    showToast('📄 正在解析Word文档...');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contract_type', document.getElementById('contract-type').value);
+    formData.append('side', currentSide);
+    
+    fetch('/api/analyze/file', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(data => {
+        if (data.detail) { showToast('⚠️ ' + data.detail); return; }
+        // 把分析结果渲染出来
+        lastResult = data;
+        renderResults(data);
+        showToast('✅ Word文档解析完成');
+      })
+      .catch(e => {
+        showToast('⚠️ Word文档解析失败，请复制粘贴文本');
+      });
+    return;
+  }
+  
+  // 纯文本文件直接读
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('contract-text').value = e.target.result;
